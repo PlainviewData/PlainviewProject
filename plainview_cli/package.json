@@ -1,0 +1,25 @@
+{
+  "name": "plainview_cli",
+  "version": "0.0.1",
+  "description": "CLI for Plainview",
+  "main": "app.js",
+  "dependencies": {
+    "child-process-promise": "^2.2.1",
+    "commander": "^2.19.0",
+    "external-editor": "^3.0.3",
+    "promisify-child-process": "^2.1.2",
+    "prompt": "^1.0.0",
+    "request": "^2.88.0",
+    "request-json": "^0.6.3",
+    "url-join": "^4.0.0",
+    "valid-url": "^1.0.9"
+  },
+  "devDependencies": {
+    "jest": "^23.6.0"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "Daniel Balagula",
+  "license": "ISC"
+}

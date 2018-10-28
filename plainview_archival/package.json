@@ -1,0 +1,26 @@
+{
+  "name": "plainview_auth",
+  "version": "0.0.1",
+  "description": "Plainview authentication server",
+  "main": "app.js",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "http-status": "^1.2.0",
+    "jsonwebtoken": "^8.3.0",
+    "moment": "^2.22.2",
+    "mongoose": "^5.3.4",
+    "restify": "^7.2.1",
+    "restify-router": "^0.5.1",
+    "rword": "^2.3.0",
+    "shortid": "^2.2.13",
+    "tedious": "^2.6.4",
+    "url-parse": "^1.4.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "start.bat",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daniel Balagula",
+  "license": "ISC"
+}
