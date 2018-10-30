@@ -110,76 +110,56 @@ program
   .command('archive [action]')
   .description('interactions with Plainview\'s archival service')
   .option("-u, --url <url>", "URL for Plainview to archive")
+  .option("-d, --date <date>", "Date of the archive in MM-DD-YYYY format")
   .option("-i, --id <id>", "Id of a Plainview archive")
   .action(function(action, options){
 		if (action == 'new') {
-			if (!options.url){
-				prompt.start()
-				prompt.get([
-					{
-						name: 'url',
-						required: true
-					}
-				], function (err, result) {
-					var uri = result.url;
-					var payload = {
-						uri: uri
-					};
-					var archivePost = new archivePostReq(payload);
-					if (!archivePost.isValid()) {
-						return console.error('Invalid form');
-					}
-					var request = new plainviewService.post({
-						payload: payload,
-						route: 'archive'
-					});
-					request.execute()
-					.then(function(body){
-						var reply = new archivePostRes(body);
-						// console.log(reply.archive)
-						// var reply = new loginPostRes(body);
-						// if (reply.err) {
-						// 	console.error(reply.err);
-						// 	process.exit(1);
-						// }
-						// userSettings.setToken(reply.token);
-						// console.log(reply.msg);
-					}).catch(function(err){
-						console.error(err);
-						process.exit(1);
-					});
-				});	
+			var uri = options.url;
+			var payload = {
+				uri: uri
+			};
+			var archivePost = new archivePostReq(payload);
+			if (!archivePost.isValid()) {
+				return console.error('Invalid form');
 			}
+			var request = new plainviewService.post({
+				payload: payload,
+				route: 'archive'
+			});
+			request.execute()
+			.then(function(body){
+				var reply = new archivePostRes(body);
+				console.log(reply.msg);
+				console.log(reply.archive.warcs);
+			}).catch(function(err){
+				console.error(err);
+				process.exit(1);
+			});
 		} else if (action == 'list') {
 
 		} else if (action == 'get') {
-			if (!options.id) {
-				prompt.start()
-				prompt.get([
-					{
-						name: 'slug',
-						require: true,
-					}
-				], function(err, result){
-					var slug = result.slug;
-					var query = {
-						slug: slug
-					};
-					var archiveGet = new archiveGetReq(query);
-					if (!archiveGet.isValid()){
-						return console.error('Invalid form');
-					}
-					var request = new plainviewService.get({
-						query: query,
-						route: '/archive'
-					});
-					request.execute()
-					.then(function(body){
-						var reply = new archiveGetRes(body);
-						console.log(reply.archive);
-					});
-				})
+			var slug = options.id;
+			var uri = options.url;
+			var date_created = options.date;
+			var query = {
+				uri: uri,
+				slug: slug,
+				date_created: date_created
+			};
+			var archiveGet = new archiveGetReq(query);
+			if (!archiveGet.isValid()){
+				return console.error('Invalid form');
 			}
+			var request = new plainviewService.get({
+				query: query,
+				route: '/archive'
+			});
+			request.execute()
+			.then(function(body){
+				var reply = new archiveGetRes(body);
+				console.log(reply.msg);
+				console.log(reply.archive);
+			});
 		} else {
 			console.error('Command %s not supported', action);
 		}
@@ -209,6 +189,5 @@ program
     console.log('  $ deploy exec sequential');
     console.log('  $ deploy exec async');
   });
-
 
 program.parse(process.argv);

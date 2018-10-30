@@ -15,6 +15,13 @@ const archiveSchema = new mongoose.Schema({
 			require: true,
 			unique: true
 		},
+		date_created: {
+			type: String,
+			require: true,
+			default: function() {
+				return moment().format('MM-DD-YYYY');
+			}
+		},
 		created: {
 			type: Date,
 			require: true,
@@ -52,12 +59,12 @@ const archiveSchema = new mongoose.Schema({
 
 archiveSchema.statics.findByURI = function(uri){
 	return new Promise(function(resolve, reject){
-		archiveSchema.find({'uri':uri})
+		Archive.findOne({'uri': uri})
 		.then(function(foundArchive){
 			resolve(foundArchive);
 		})
 		.catch(function(err){
-			reject();
+			reject(err);
 		});
 	});
 };
@@ -74,7 +81,19 @@ archiveSchema.statics.findByWarcSlug = function(slug){
 	});
 }
 
-archiveSchema.statics.minMinutesBeforeReArchive = 1;
+archiveSchema.statics.findByURIAndDate = function(uri, date_created){
+	return new Promise(function(resolve, reject){
+		Archive.findOne({'uri': uri, 'warcs.date_created': date_created}, {'times_accessed': true, 'warcs.$': 1})
+		.then(function(foundWarc){
+			resolve(foundWarc);
+		})
+		.catch(function(err){
+			reject(err);
+		})
+	});
+}
+
+archiveSchema.statics.minMinutesBeforeRearchive = process.env.MIN_MINUTES_BEFORE_REARCHIVE;
 
 archiveSchema.statics.normalizeURI = function(uri){
 	const schemes = ['http:', 'https:'];

@@ -28,7 +28,7 @@ router.post('/archive', function(req, res, next){
 		if (foundArchive){
 			var now = moment();
 			var minutesSinceLastUpdated = now.diff(foundArchive.last_updated, 'minutes');
-			if (minutesSinceLastUpdated < Archive.minMinutesBeforeReArchive) {
+			if (minutesSinceLastUpdated < Archive.minMinutesBeforeRearchive) {
 				var reply = new archivePostRes({ 'msg': 'Found archive from ' + minutesSinceLastUpdated + ' minutes ago', 'archive': foundArchive });
 				throw { thrown: true, reply: reply, status: status.ACCEPTED }	
 			}
@@ -63,11 +63,9 @@ router.get('/archive', function(req, res, next){
 		var reply = new archiveGetRes({ 'err': 'Invalid form' });	
 		throw { thrown: true, reply: reply, status: status.BAD_REQUEST }
 	}
-	var retrievalField = archiveGet.retrievalField;
-	var retrievalValue = archiveGet.retrievalValue;
-	if (retrievalField == 'uri'){
-		retrievalValue = Archive.normalizeURI(retrievalValue);
-		Archive.findByURI(retrievalValue)
+	if (archiveGet.retrievalField() == archiveGet.URI){
+		var normalizedURI = Archive.normalizeURI(archiveGet.uri);
+		Archive.findByURI(normalizedURI)
 		.then(function(foundArchive){
 			if (!foundArchive) {
 				var reply = new archiveGetRes({ 'msg': 'Archive not found' });
@@ -82,20 +80,27 @@ router.get('/archive', function(req, res, next){
 			if (err.thrown) {
 				return res.json(err.status, err.reply);
 			}
+			req.err = err;
 			handleServerError(req, res);
 		});
-	} else if (retrievalField == 'slug'){
-		Archive.findByWarcSlug(retrievalValue)
+	} else if (archiveGet.retrievalField() == archiveGet.SLUG) {
+		Archive.findByWarcSlug(archiveGet.slug)
 		.then(function(foundArchive){
 			if (!foundArchive) {
 				var reply = new archiveGetRes({ 'msg': 'Archive not found' });
 				throw { thrown: true, reply: reply, status: status.NOT_FOUND }	
 			}
-			Archive.update({'_id': foundArchive._id}, 
-				{'times_accessed': foundArchive.times_accessed + 1}
-			)
+			foundArchive.times_accessed += 1;
+			foundArchive.warcs[0].times_accessed += 1;
+			
 			var reply = new archiveGetRes({ 'msg': 'Archive found', 'archive': foundArchive });
-			return res.json(status.ACCEPTED, reply);	
+			res.json(status.ACCEPTED, reply);	
+			
+			Archive.findOneAndUpdate({'_id': foundArchive.id}, foundArchive, function(err, updatedArchive){
+				if (err) {
+					console.log('GET archive: findOneAndUpdate err', err);
+				}
+			});
 		})
 		.catch(function(err){
 			if (err.thrown) {
@@ -104,6 +109,12 @@ router.get('/archive', function(req, res, next){
 			req.err = err;
 			handleServerError(req, res);
 		});
+	} else if (archiveGet.retrievalField() == archiveGet.URI_DATE) {
+		var normalizedURI = Archive.normalizeURI(archiveGet.uri);
+		Archive.findByURIAndDate(normalizedURI, archiveGet.date_created)
+		.then(function(foundArchive){
+			res.json(foundArchive)
+		})
 	}
 });
 
